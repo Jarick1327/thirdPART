@@ -1,65 +1,53 @@
 #define SDL_MAIN_USE_CALLBACKS 1
 
-#include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-static SDL_Window *window = nullptr; //объект
-static SDL_Renderer *renderer = nullptr; //Встроенный в SDL рендер
+#include "Model.hpp" //подключили файл заголовка
 
-SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
-////initialize -
-//**appstate - ссылка на ссылку, указатель на указатель
-//argc - количество аргументов, argv - вектор сишных строк
-
-//обработка ошибок при создании
+//4 функции обязательно, их реализацию менять
+SDL_AppResult SDL_AppInit( void **appstate, int argc, char *argv[] )
 {
-    if (!SDL_Init(SDL_INIT_VIDEO))
-    {
-        SDL_Log("Could not initialize SDL: %s", SDL_GetError());
-            return SDL_APP_FAILURE;
-    }
+    //auto -когда мы объявляем переменную, компиллятор сам может выводить её тип
+    auto app = new Model; //используя тип результата в правой части
 
-    if (!SDL_CreateWindowAndRenderer("week3_qt",
-                                     480, 360,
-                                     0,
-                                     &window, &renderer))
-    {
-        SDL_Log("Could not create window/renderer: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
+    //разыменование (что лежит по адресу) appstate
+    *appstate = static_cast<void*>(app);
+    //размер указателя фиксирован и зависит от платформы -
+    //в 64-битной 8-битный указатель
 
-    return SDL_APP_CONTINUE;
+    //FAILURE - мы не можем продолжить работу
+    return app -> init();
 }
-
-//?
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
+//указатель на объект события
 {
-    if (event -> type == SDL_EVENT_QUIT)
+    auto app = static_cast<Model*>(appstate);
+
+    if (app && event)
     {
-        return SDL_APP_SUCCESS;
+        return app->onEvent(*event);
     }
 
-    return SDL_APP_CONTINUE;
+    return SDL_APP_FAILURE;
 }
-//event - событие
 
-//отрисовка окна
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
-    SDL_SetRenderDrawColorFloat(renderer,
-                                0.7f,
-                                0.5f,
-                                1.0f,
-                                SDL_ALPHA_OPAQUE_FLOAT); //цифры - RGB
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
+    auto app = static_cast<Model*>(appstate);
+    if (app)
+    {
+        return app->iterate();
+    }
 
-    return SDL_APP_CONTINUE;
+    return SDL_APP_FAILURE;
 }
 
-//выход и удаление
 void SDL_AppQuit(void *appstate, SDL_AppResult result)
 {
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    auto app = static_cast<Model*>(appstate);
+    //если безликий указатель заполнен, то удалить его
+    if (app)
+    {
+        delete app;
+    }
 }

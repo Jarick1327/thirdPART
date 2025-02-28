@@ -1,9 +1,11 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.30)
 
-project(week3_qt)
+project(week5)
 
 find_package(SDL3 CONFIG REQUIRED)
 
-add_executable(week3_qt main.cpp)
+add_executable(${PROJECT_NAME} main.cpp)
 
-target_link_libraries(week3_qt PRIVATE SDL3::SDL3)
+target_sources( ${PROJECT_NAME} PRIVATE Model.hpp Model.cpp)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
